@@ -2,9 +2,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
+from fastapi.responses import FileResponse
+
 
 app = FastAPI(title="Spam Detection API")
-
+@app.get("/")
+def home():
+    return FileResponse("index.html")
 # CORS Settings
 app.add_middleware(
     CORSMiddleware,
