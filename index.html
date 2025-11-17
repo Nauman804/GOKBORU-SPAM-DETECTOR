@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>  GOKBORU MODE — Ultimate Spam Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cyan:#00eaff; --blue:#0073ff; --red:#ff0033; --neon:#6af;
+    --glass: rgba(10,12,20,0.56);
+  }
+  html,body{height:100%;margin:0;background:#000;overflow:hidden;font-family:'Poppins',sans-serif;color:#dff}
+  /* ---------- NEON SKYLINE ---------- */
+  .sky {
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(0,120,255,0.08), transparent 10%),
+      linear-gradient(180deg, rgba(0,6,20,0.85), rgba(0,0,6,0.95));
+  }
+  .sky::after{
+    content:"";
+    position:absolute;left:0;right:0;bottom:0;height:42%;
+    background: linear-gradient(180deg, rgba(6,8,17,0) 0%, rgba(3,6,20,0.6) 100%);
+  }
+  /* distant neon skyline silhouette */
+  .skyline{
+    position:absolute;left:0;right:0;bottom:6vh;height:30vh;z-index:0;
+    background-image: url('https://i.imgur.com/6y3kW0K.png');
+    background-position:center bottom;background-size:cover;opacity:0.18;filter:blur(6px) saturate(140%);
+    mix-blend-mode:screen;
+  }
+
+  /* ---------- GIANT WOLF BG (center, faded mechanical) ---------- */
+  .wolf-bg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none}
+  .wolf-img{
+    width:84vmin;max-width:1500px;opacity:.18;transform:translateY(-6vh);
+    transition:transform .6s, filter .5s;
+    filter: contrast(140%) saturate(130%) drop-shadow(0 0 40px rgba(0,160,255,0.25));
+  }
+  /* wolf eyes glowing element (overlay pseudo) */
+  .wolf-eyes {
+    position: absolute; width: 60vmin; height: 60vmin; pointer-events:none; z-index:0; transform:translateY(-6vh);
+    background: radial-gradient(circle at 55% 45%, rgba(255,40,40,0.18), transparent 6%),
+                radial-gradient(circle at 45% 45%, rgba(255,40,40,0.12), transparent 5%);
+    mix-blend-mode:screen; opacity:0.35; transition:opacity .4s, transform .4s;
+  }
+
+  /* ---------- MATRIX RAIN (canvas) ---------- */
+  canvas#matrix{position:fixed;inset:0;z-index:0;mix-blend-mode:screen;opacity:0.22}
+
+  /* ---------- FLOOR GRID (3D neon) ---------- */
+  .grid-floor{
+    position:fixed;left:0;right:0;bottom:-10vh;height:50vh;z-index:0;pointer-events:none;
+    background-image: linear-gradient(0deg, rgba(0,160,255,0.06) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(0,160,255,0.06) 1px, transparent 1px);
+    background-size:36px 36px; transform: perspective(900px) rotateX(60deg) translateY(12vh);
+    filter: blur(8px) saturate(120%); opacity: .12;
+  }
+
+  /* ---------- MAIN CARD (HOLOGRAM) ---------- */
+  .card{
+    position:relative;z-index:5;margin:6vh auto; width:min(1100px,95%); border-radius:18px;
+    background: linear-gradient(180deg, rgba(8,12,18,0.6), rgba(6,8,16,0.45));
+    border:1px solid rgba(0,160,255,0.08); padding:28px; display:flex; gap:24px; align-items:stretch;
+    box-shadow: 0 12px 80px rgba(0,120,220,0.12), inset 0 1px 0 rgba(255,255,255,0.02);
+    backdrop-filter: blur(12px) saturate(120%);
+    transform-style:preserve-3d;
+  }
+  .left{flex:1;display:flex;flex-direction:column;gap:12px}
+  .right{width:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+
+  h1{margin:0;font-family:'Orbitron',sans-serif;color:var(--cyan);text-shadow:0 0 16px rgba(0,230,255,0.12);font-size:30px}
+  p.lead{margin:0;color:#bfe;font-size:14px}
+
+  textarea#msg{
+    width:100%;min-height:220px;padding:16px;border-radius:14px;
+    background:linear-gradient(180deg, rgba(0,10,20,0.66), rgba(0,6,10,0.45));
+    color:var(--cyan);border:1px solid rgba(0,200,255,0.06);outline:none;font-size:15px;
+    box-shadow: inset 0 0 26px rgba(0,120,220,0.04);
+    transition: box-shadow .2s, transform .12s;
+  }
+  textarea#msg:focus{box-shadow: inset 0 0 30px rgba(0,200,255,0.08); transform: translateY(-2px)}
+
+  /* controls row */
+  .controls{display:flex;gap:12px;align-items:center;margin-top:8px}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;border:none;cursor:pointer;
+    color:#001; background:linear-gradient(90deg,var(--cyan),var(--blue)); font-weight:800; letter-spacing:1px;
+    box-shadow:0 10px 40px rgba(0,150,255,0.12); transform-origin:center; transition:transform .16s, box-shadow .16s;
+  }
+  .btn:hover{transform:translateY(-4px);box-shadow:0 18px 50px rgba(0,160,255,0.22)}
+  .btn-ghost{background:transparent;border:1px solid rgba(0,160,255,0.06);color:var(--cyan);font-weight:700}
+
+  /* hologram right */
+  .holo{
+    width:100%;max-width:420px;min-height:380px;border-radius:12px;padding:18px;
+    background: linear-gradient(180deg, rgba(0,18,30,0.5), rgba(0,8,18,0.25));
+    border:1px solid rgba(0,160,255,0.08);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 14px 60px rgba(0,110,200,0.08); position:relative; overflow:hidden;
+  }
+  .ring{width:200px;height:200px;border-radius:50%;display:grid;place-items:center;position:relative;margin-bottom:8px}
+  .ring:before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(0,230,255,0.06),transparent 40%);animation:spin 6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #result{width:100%;text-align:center;font-weight:800;padding:12px;border-radius:10px;min-height:74px;letter-spacing:1px}
+  .result-spam{background:linear-gradient(90deg, rgba(255,20,20,0.08), rgba(30,0,0,0.03)); color:#ffbdbd; border:1px solid rgba(255,40,40,0.12); box-shadow:0 10px 40px rgba(255,40,40,0.06)}
+  .result-ham{background:linear-gradient(90deg, rgba(0,200,120,0.06), rgba(0,20,0,0.02));color:#b7ffd8;border:1px solid rgba(0,200,120,0.08);box-shadow:0 8px 30px rgba(0,200,120,0.04)}
+
+  /* energy wave (on scan) */
+  .wave{position:absolute;left:50%;top:50%;width:20px;height:20px;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);opacity:0}
+  @keyframes waveAnim{0%{opacity:.6;transform:translate(-50%,-50%) scale(.4)}50%{opacity:.18;transform:translate(-50%,-50%) scale(1.8)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}}
+
+  /* electric sparks */
+  .sparks{position:absolute;inset:0;pointer-events:none;z-index:10}
+  .spark{position:absolute;width:6px;height:6px;border-radius:2px;background:linear-gradient(90deg,#fff,#ff5b5b);box-shadow:0 0 8px #ff6b6b;opacity:0;transform:scale(0);}
+
+  /* wolf signature & small footer */
+  .signature{position:fixed;right:18px;bottom:12px;color:#ff0033;font-weight:900;text-shadow:0 0 14px #ff0033,0 0 30px #cc0029;padding:6px 10px;border-radius:8px;background:rgba(0,0,0,0.2);z-index:6}
+
+  /* responsive */
+  @media(max-width:1000px){ .card{flex-direction:column;align-items:stretch}.right{width:100%}.wolf-img{width:140vmin} }
+</style>
+</head>
+<body>
+
+<div class="sky"></div>
+<div class="skyline" aria-hidden="true"></div>
+
+<canvas id="matrix"></canvas>
+<div class="grid-floor" aria-hidden="true"></div>
+
+<!-- giant mechanical wolf behind -->
+<div class="wolf-bg" aria-hidden="true">
+  <img class="wolf-img" src="https://i.imgur.com/3V5p0lD.png" alt="mechanical wolf">
+  <div class="wolf-eyes" aria-hidden="true"></div>
+</div>
+
+<!-- energy sparks container -->
+<div class="sparks" id="sparks"></div>
+
+<!-- main card -->
+<div class="card" role="main" aria-label="Gokboru Spam  Detector ">
+  <div class="left">
+    <h1>GOKBORU — SPAM DETECTOR </h1>
+    <p class="lead">Type a message and press <strong>SCAN</strong>. 
+
+    <textarea id="msg" placeholder="Type your message here..."></textarea>
+
+    <div class="controls">
+      <button class="btn" id="scanBtn">SCAN — ENGAGE</button>
+      <button class="btn btn-ghost" id="clearBtn">CLEAR</button>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="holo" id="holo">
+      <div class="ring"><div class="scanner-glow" id="scannerIcon">⚡</div></div>
+      <div id="result" aria-live="polite"></div>
+      <div class="wave" id="wave"></div>
+    </div>
+  </div>
+</div>
+
+<div class="signature">🐺 Noman Gokboru</div>
+
+<!-- audio -->
+<audio id="wolfRoar" src="https://actions.google.com/sounds/v1/animals/wolf_bark.ogg" preload="auto"></audio>
+<audio id="safeChime" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<script>
+/* ---------- Matrix Rain ---------- */
+const canvas = document.getElementById('matrix'), ctx = canvas.getContext('2d');
+let W,H,cols,ypos;
+function initMatrix(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;cols=Math.floor(W/18);ypos=Array(cols).fill(0).map(()=>Math.random()*H)}
+function matrixLoop(){ctx.fillStyle='rgba(0,0,0,0.07)';ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(0,220,255,0.18)';ctx.font='14px monospace';
+ for(let i=0;i<cols;i++){const txt=String.fromCharCode(0x30A0+Math.random()*96);ctx.fillText(txt,i*18,ypos[i]);ypos[i]+=14+Math.random()*20;if(ypos[i]>H) ypos[i]=0}}
+initMatrix(); (function mloop(){matrixLoop(); requestAnimationFrame(mloop)})(); addEventListener('resize',initMatrix);
+
+/* ---------- Parallax Wolf Movement based on mouse ---------- */
+const wolfImg = document.querySelector('.wolf-img');
+document.addEventListener('mousemove', (e)=>{
+  const cx = innerWidth/2, cy = innerHeight/2;
+  const dx = (e.clientX - cx)/cx, dy = (e.clientY - cy)/cy;
+  // subtle parallax
+  wolfImg.style.transform = `translate(${dx*6}%, ${-6 + dy*3}vh) scale(${1 + Math.abs(dx)*0.02})`;
+  document.querySelector('.wolf-eyes').style.transform = `translate(${dx*10}px, ${dy*6}px)`;
+});
+
+/* ---------- Sparks generator for SPAM ---------- */
+function makeSparks(count=12){
+  const container = document.getElementById('sparks');
+  for(let i=0;i<count;i++){
+    const s=document.createElement('div'); s.className='spark';
+    s.style.left = (20+Math.random()*60)+'%';
+    s.style.top  = (10+Math.random()*80)+'%';
+    s.style.background = Math.random()>0.5 ? 'linear-gradient(90deg,#fff,#ff6b6b)' : 'linear-gradient(90deg,#aaffff,#00bfff)';
+    container.appendChild(s);
+    // animate
+    setTimeout(()=>{ s.style.opacity=1; s.style.transform='scale(1)'; s.style.transition='transform .45s linear, opacity .45s'; }, 10);
+    // remove
+    setTimeout(()=>{ s.style.opacity=0; s.style.transform='scale(.2)'; s.style.transition='transform .7s, opacity .7s'; setTimeout(()=>s.remove(),900); }, 550 + Math.random()*900);
+  }
+}
+
+/* ---------- Wave pulse ---------- */
+function wavePulse(){
+  const w = document.getElementById('wave');
+  w.style.left='50%'; w.style.top='50%'; w.style.opacity=1; w.style.transform='translate(-50%,-50%) scale(.4)';
+  w.style.background = 'radial-gradient(circle, rgba(0,200,255,0.35), rgba(0,150,255,0.08))';
+  w.style.boxShadow='0 0 30px rgba(0,200,255,0.2)';
+  w.style.transition='transform .9s ease-out, opacity .9s';
+  w.style.animation='none';
+  // animate
+  setTimeout(()=>{ w.style.transform='translate(-50%,-50%) scale(2.3)'; w.style.opacity=0; }, 20);
+  setTimeout(()=>{ w.style.opacity=0; }, 1000);
+}
+
+/* ---------- Fetch predict and reactions ---------- */
+const scanBtn = document.getElementById('scanBtn');
+const clearBtn = document.getElementById('clearBtn');
+const msg = document.getElementById('msg');
+const resultBox = document.getElementById('result');
+const wolfRoar=document.getElementById('wolfRoar'), safeChime=document.getElementById('safeChime');
+
+scanBtn.addEventListener('click', async ()=>{
+  const text = msg.value.trim();
+  if(!text){ alert('Type a message first'); return; }
+  // UI start
+  resultBox.textContent='SCANNING — AI CORE';
+  resultBox.className='';
+  wavePulse();
+
+  try{
+    const res = await fetch('http://127.0.0.1:8000/predict',{
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+
+    // show typed effect:
+    resultBox.className = data.prediction==='spam' ? 'result-spam' : 'result-ham';
+    const msgText = data.prediction==='spam' ? '⚠ SPAM — THREAT LEVEL: RED' : '✔ SAFE — NO MALICIOUS CONTENT';
+    let i=0; resultBox.textContent=''; const t = setInterval(()=>{ resultBox.textContent += msgText.charAt(i++); if(i>=msgText.length) clearInterval(t) }, 28);
+
+    // reactions:
+    if(data.prediction==='spam'){
+      // big wolf roar + sparks + red glow
+      try{ wolfRoar.currentTime=0; wolfRoar.play(); }catch(e){}
+      makeSparks(18);
+      document.querySelector('.wolf-img').style.filter='contrast(170%) saturate(170%) hue-rotate(-10deg) drop-shadow(0 0 50px rgba(255,30,30,0.95))';
+      document.querySelector('.wolf-eyes').style.opacity=0.9;
+    } else {
+      try{ safeChime.currentTime=0; safeChime.play(); }catch(e){}
+      makeSparks(8);
+      document.querySelector('.wolf-img').style.filter='contrast(140%) saturate(120%) hue-rotate(170deg) drop-shadow(0 0 40px rgba(0,200,255,0.6))';
+      document.querySelector('.wolf-eyes').style.opacity=0.35;
+    }
+
+  }catch(err){
+    console.error(err); resultBox.textContent='ERROR: Could not reach API — run backend';
+  }
+});
+
+clearBtn.addEventListener('click', ()=>{ msg.value=''; resultBox.textContent=''; resultBox.className=''; document.querySelector('.wolf-img').style.filter=''; document.querySelector('.wolf-eyes').style.opacity=0.35; });
+
+/* initial wolf-eyes opacity */
+document.addEventListener('DOMContentLoaded', ()=>{ document.querySelector('.wolf-eyes').style.opacity=0.35; });
+</script>
+
+</body>
+</html>
