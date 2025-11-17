@@ -19,6 +19,7 @@ app.add_middleware(
 model = joblib.load("app/models/spam_model.pkl")
 tfidf = joblib.load("app/models/vectorizer.pkl")
 
+
 class Message(BaseModel):
     text: str
 
