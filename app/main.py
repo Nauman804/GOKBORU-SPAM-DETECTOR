@@ -5,7 +5,7 @@ import joblib
 
 app = FastAPI(title="Spam Detection API")
 
-# CORS Settings (allow frontend)
+# CORS Settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,23 +14,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ------------ Load Model & Vectorizer ------------
-# Make sure these files exist inside /models/
+# Load Model and Vectorizer
 model = joblib.load("models/spam_model.pkl")
 tfidf = joblib.load("models/vectorizer.pkl")
 
 
-# ------------ Request Body ------------
+# Home Route (IMPORTANT)
+@app.get("/")
+def home():
+    return {"message": "Spam Detector API is running!"}
+
+
+# Request Body
 class Message(BaseModel):
     text: str
 
 
-# ------------ Prediction API ------------
+# Prediction API
 @app.post("/predict")
 def predict_text(data: Message):
     vector = tfidf.transform([data.text])
     prediction = model.predict(vector)[0]
     label = "spam" if prediction == 1 else "ham"
     return {"text": data.text, "prediction": label}
+
 
 
