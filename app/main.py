@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import joblib
 
@@ -21,6 +22,10 @@ tfidf = joblib.load("app/models/vectorizer.pkl")
 class Message(BaseModel):
     text: str
 
+@app.get("/")
+def home():
+    return FileResponse("app/static/index.html")
+
 @app.post("/predict")
 def predict_text(data: Message):
     vector = tfidf.transform([data.text])
@@ -28,5 +33,5 @@ def predict_text(data: Message):
     label = "spam" if prediction == 1 else "ham"
     return {"text": data.text, "prediction": label}
 
-# 🚀 Serve HTML frontend from /static/index.html
-app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
+# serve CSS, JS, images if any
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
