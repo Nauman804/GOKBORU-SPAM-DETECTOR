@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import joblib
 from fastapi.staticfiles import StaticFiles
+import joblib
 
 app = FastAPI(title="Spam Detection API")
 
@@ -14,8 +14,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = joblib.load("models/spam_model.pkl")
-tfidf = joblib.load("models/vectorizer.pkl")
+# load ML model
+model = joblib.load("app/models/spam_model.pkl")
+tfidf = joblib.load("app/models/vectorizer.pkl")
 
 class Message(BaseModel):
     text: str
@@ -27,5 +28,5 @@ def predict_text(data: Message):
     label = "spam" if prediction == 1 else "ham"
     return {"text": data.text, "prediction": label}
 
-# serve frontend
+# 🚀 Serve HTML frontend from /static/index.html
 app.mount("/", StaticFiles(directory="app/static", html=True), name="static")
