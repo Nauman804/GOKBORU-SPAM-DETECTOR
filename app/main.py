@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import joblib
+import os
 
 app = FastAPI(title="Spam Detection API")
 
@@ -22,10 +24,12 @@ class Message(BaseModel):
     text: str
 
 # Serve homepage
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 def home():
-    with open("index.html", "r", encoding="utf-8") as f:  # root folder
-        return f.read()
+    return FileResponse("app/static/index.html")
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.post("/predict")
 def predict_text(data: Message):
@@ -33,3 +37,4 @@ def predict_text(data: Message):
     prediction = model.predict(vector)[0]
     label = "spam" if prediction == 1 else "ham"
     return {"text": data.text, "prediction": label}
+
