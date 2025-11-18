@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 import joblib
 
 app = FastAPI(title="Spam Detection API")
@@ -15,9 +14,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files (MUST be above routes)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
 # Load model
 model = joblib.load("app/models/spam_model.pkl")
 tfidf = joblib.load("app/models/vectorizer.pkl")
@@ -25,9 +21,10 @@ tfidf = joblib.load("app/models/vectorizer.pkl")
 class Message(BaseModel):
     text: str
 
+# Serve homepage
 @app.get("/", response_class=HTMLResponse)
 def home():
-    with open("app/static/index.html", "r", encoding="utf-8") as f:
+    with open("index.html", "r", encoding="utf-8") as f:  # root folder
         return f.read()
 
 @app.post("/predict")
